@@ -1,0 +1,27 @@
+### Temat
+Kodowanie danych za pomocą C i assemblera.
+Jeden proces tworzy wiadomość, szyfruje przekazuje do drugiego procesu który ją odszyfrowuje.
+
+1. Ustalanie i wymiana klucza - Diffie-Hellman
+2. Ustal Wiadomość.
+3. Zakoduj wiadomość kodowaniem transportowym (base64)
+4. Zaszyfrowanie wiadomości AES256 / TEA
+4. Przekazanie wiadomości do drugiego procesu
+5. Odszyfrowanie i odkodowanie
+6. Wyświetlenie na stdout
+
+### Moduły:
+1. Procesy, przekazywanie wiadomości zapis i odczyt z pliku
+   (pipes/named pipes/posix queues) - C
+
+2. Diffie-Hellman - C
+   OpenSSL - generowanie liczb losowych
+   Modularna arytmetyka
+
+3. Kodownie Szyfrowanie  - C + inline ASM
+
+   void Base64_Encode(const char *in, const char *out)
+   void Base64_Decode(const char *in, const char *out)
+
+   void TEA_Encrypt(const char *in, const char *out, const char *key)
+   void TEA_Decrypt(const char *in, const char *out, const char *key)
