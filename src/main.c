@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/wait.h>
+#include "cryptography/print.h"
 
 
 #define MESSAGE_SIZE 512
@@ -12,7 +13,7 @@ typedef struct {
   char *text;
 } message_t;
 
-char* GetMessage() {
+char* get_message() {
   // Read the msg from stdin. The size of msg is arbitrary - memory
   // is reallocated as needed
   char* message = (char*)calloc(1,1), buffer[MESSAGE_SIZE];
@@ -28,23 +29,27 @@ char* GetMessage() {
 }
 
 int main(int argc, char* argv[]) {
+  print();
   int pid, status;
 
   // Create pipe for communication between processes
   int msg_pipe[2];
   pipe(msg_pipe);
 
-  // Child Process
+  // Child process
   if((pid = fork()) == 0) {
     char secret_message[MESSAGE_SIZE];
     close(msg_pipe[1]);
     int rd = read(msg_pipe[0], secret_message, sizeof(secret_message));
     if(rd == 0)
       printf("Empty Message.\n");
-    printf("Child proces recived message: \n");
-    printf("%s", secret_message);
+    else {
+      printf("Child proces recived message: \n");
+      printf("%s", secret_message);
+    }
     exit(0);
   }
+  // Parent process
   else {
     // Get message and write it to pipe
     char message[MESSAGE_SIZE];
@@ -57,4 +62,5 @@ int main(int argc, char* argv[]) {
   // Wait for process to finish
   pid = wait(&status);
   printf("Child process finished with status: %d.\n", WEXITSTATUS(status));
+  return 0;
 }
