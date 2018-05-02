@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 project(AK2_Projekt C ASM)
+set (CMAKE_CXX_FLAGS "-g")
+set(CMAKE_BUILD_TYPE Debug)
 
 set_source_files_properties(print.s PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
 
@@ -10,4 +12,4 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
-add_executable(main src/main.c src/cryptography/print.s)
+add_executable(main src/main.c src/cryptography/print.s src/cryptography/base64.s)
