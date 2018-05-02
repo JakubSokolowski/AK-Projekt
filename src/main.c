@@ -71,17 +71,18 @@ void b64_encode_test() {
     char encoded[512];
     int len = sizeof(message) / sizeof(char);
     base64_encode(message, encoded, len);
-    printf("Decoded msg: %s\nEncoded msg: %s\n", message, encoded);
+    printf("Msg: %s\nYW55IGNhcm5hbCBwbGVhc3VyZS4=\n%s\n", message, encoded);
     char message2[] = "any carnal pleasure";
     char encoded2[512];
     int len2 = sizeof(message2) / sizeof(char);
     base64_encode(message2, encoded2, len2);
-    printf("Decoded msg: %s\nEncoded msg: %s\n", message2, encoded2);
+    printf("Msg: %s\nYW55IGNhcm5hbCBwbGVhc3VyZQ==\n%s\n", message2, encoded2);
     char message3[] = "any carnal pleasur";
     char encoded3[512];
     int len3 = sizeof(message3) / sizeof(char);
-    base64_encode(message3, encoded3, len3);
-    printf("Decoded msg: %s\nEncoded msg: %s\n", message3, encoded3);
+    int len4 = base64_encode(message3, encoded3, len3);
+    printf("Msg: %s\nYW55IGNhcm5hbCBwbGVhc3Vy\n%s\n", message3, encoded3);
+    printf("Len 24: %d\n", len4);
 }
 
 int main(int argc, char* argv[]) {
