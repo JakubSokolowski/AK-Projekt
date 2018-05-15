@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/wait.h>
 #include "cryptography/print.h"
 #include "cryptography/base64.h"
+#include "cryptography/tea.h"
 
 
 #define MESSAGE_SIZE 512
@@ -85,8 +87,56 @@ void b64_encode_test() {
     printf("Len 24: %d\n", len4);
 }
 
+void encrypt_compare (uint32_t* v, uint32_t* k) {
+    uint32_t v0=v[0], v1=v[1], sum=0, i;           /* set up */
+    uint32_t delta=0x9e3779b9;                     /* a key schedule constant */
+    uint32_t k0=k[0], k1=k[1], k2=k[2], k3=k[3];   /* cache key */
+    for (i=0; i < 32; i++) {                       /* basic cycle start */
+        sum += delta;
+        v0 += ((v1<<4) + k0) ^ (v1 + sum) ^ ((v1>>5) + k1);
+        v1 += ((v0<<4) + k2) ^ (v0 + sum) ^ ((v0>>5) + k3);
+    }                                              /* end cycle */
+    v[0]=v0; v[1]=v1;
+}
+
+void decrypt_compare(uint32_t* v, uint32_t* k) {
+    uint32_t v0=v[0], v1=v[1], sum=0xC6EF3720, i;  /* set up */
+    uint32_t delta=0x9e3779b9;                     /* a key schedule constant */
+    uint32_t k0=k[0], k1=k[1], k2=k[2], k3=k[3];   /* cache key */
+    for (i=0; i<32; i++) {                         /* basic cycle start */
+        v1 -= ((v0<<4) + k2) ^ (v0 + sum) ^ ((v0>>5) + k3);
+        v0 -= ((v1<<4) + k0) ^ (v1 + sum) ^ ((v1>>5) + k1);
+        sum -= delta;
+    }                                              /* end cycle */
+    v[0]=v0; v[1]=v1;
+}
+
+void tea_encrypt_test() {
+    uint32_t k[4];
+    uint32_t v[] = {0xFFFFFFFF, 0xFFFFFFFF};
+    printf("C   Implementation Original Values:  ");
+    printf("[ %X %X ]", v[0], v[1]);
+    encrypt_compare(v, k);
+    printf("\nC   Implementation Encrypted Values: ");
+    printf("[ %X %X ]", v[0], v[1]);
+    printf("\nC   Implementation Decrypted Values: ");
+    decrypt_compare(v,k);
+    printf("[ %X %X ]\n", v[0], v[1]);
+
+    uint32_t v1[] = {0xFFFFFFFF, 0xFFFFFFFF};
+    printf("\nASM Implementation Original Values:  ");
+    printf("[ %X %X ]", v1[0], v1[1]);
+    encrypt(v1, k);
+    printf("\nASM Implementation Encrypted Values: ");
+    printf("[ %X %X ]", v1[0], v1[1]);
+    printf("\nASM Implementation Decrypted Values: ");
+    decrypt(v1,k);
+    printf("[ %X %X ]\n", v1[0], v1[1]);
+}
+
 int main(int argc, char* argv[]) {
     // run();
-    b64_encode_test();
+    // b64_encode_test();
+    tea_encrypt_test();
     return 0;
 }
