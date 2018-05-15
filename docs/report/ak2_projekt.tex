@@ -1,0 +1,43 @@
+\documentclass[11pt]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[polish]{babel}
+\usepackage{mathptmx}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage{advdate}
+\usepackage[none]{hyphenat}
+\selectlanguage{polish}
+\usepackage[left=2.5cm,top=2.5cm,right=2.5cm,bottom=2.5cm,bindingoffset=0.5cm]{geometry}
+
+
+
+\title{SO2 Temat Projektu}
+\date{}
+\author{Jakub Sokołowski}
+\newcommand{\LabNum}{1}
+\setcounter{chapter}{\LabNum}
+\begin{document}
+\noindent
+Jakub Sokołowski 226080, Mariola Wróbel 226112 \hfill Wrocław, dn.\ {\AdvanceDate[-1]\today}\\
+
+\noindent
+ŚR-N-11\hfill prowadzący: dr inż. Dominik Żelazny
+\vspace{1cm}
+\begin{center}
+  \begin{Large}
+  	Projekt z Architektur Komputerów 2\\
+    \emph{Kodowanie danych za pomocą C i asemblera}
+  \end{Large}
+\end{center}
+\section{Opis projektu}
+Zaszyfrowana komunikacja między procesami. Wysyłanie zaszyfrowanej wiadomości z jednego procesu do drugiego przy użyciu różnych protokołów i algorytmów kryptograficznych. Algorytmy zostaną zaimplementowane przy użyciu języka C i asemblera.
+\section {Etapy projektu}
+\begin{itemize}
+\item{I Etap: \\Stworzenie dwóch procesów i przekazanie pomiędzy nimi zakodowanej za pomocą \textbf{base64} wiadomości. Komunikacja między procesami będzie odbywała sie w warstwie C, z użyciem funkcji fork(), a alogrytmy kodujące i szyfrujące będą napisane w asemblerze.}
+\item{II Etap: \\Zaszyfrowanie wiadomości za pomocą szyfru blokowego. Przekazanie wiadomości i klucza do drugiego procesu i odszyfrowanie wiadomości. Dodanie możliwości przesyłania plików.}
+\item{III Etap: \\Ustalenie wspólnego klucza za pomocą wymiany \textbf{Diffieg-Hellman}. Bezpieczna komunikacja między procesami. Użycie bibloteki \textbf{OpenSSL}, do pobrania dużych liczb pierwszych i~generowanie kryptograficznie bezpiecznych liczb losowych.}
+
+\end{document}
