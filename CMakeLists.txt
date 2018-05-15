@@ -12,4 +12,4 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
-add_executable(main src/main.c src/cryptography/print.s src/cryptography/base64.s)
+add_executable(main src/main.c src/cryptography/print.s src/cryptography/base64.s src/cryptography/tea.s)
