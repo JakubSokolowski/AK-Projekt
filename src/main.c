@@ -1,72 +1,36 @@
 #include <stdio.h>
+#include <mqueue.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/types.h>
 #include <sys/wait.h>
+
 #include "cryptography/print.h"
 #include "cryptography/base64.h"
 #include "cryptography/tea.h"
 
 
 #define MESSAGE_SIZE 512
+#define KEY_SIZE 16
+char key[KEY_SIZE] = "TESTKLUCZA123456";
+
+#define CHECK(x) \
+    do { \
+        if ( 0>(x)){ \
+            fprintf(stderr, "%s:%d: ", __func__, __LINE__); \
+            perror(#x); \
+            exit(-1); \
+        } \
+    } while (0) \
 
 typedef struct {
-    int msg_size;
-    char *text;
+    int  size;
+    char text[MESSAGE_SIZE];
+    char key[KEY_SIZE];
 } message_t;
 
-char* get_message() {
-    // Read the msg from stdin. The size of msg is arbitrary - memory
-    // is reallocated as needed
-    char* message = (char*)calloc(1,1), buffer[MESSAGE_SIZE];
-    printf("Enter a message: \n");
-    // Only pressing ctrl+d or ctr+z stops reading the message
-    while (fgets(buffer, MESSAGE_SIZE, stdin)) {
-        message = (char*) realloc(message, strlen(message) + 1 + strlen(buffer));
-        if(!message)
-            perror("fgets");
-        strcat(message, buffer);
-    }
-    return message;
-}
-
-void run() {
-    print();
-    int pid, status;
-
-    // Create pipe for communication between processes
-    int msg_pipe[2];
-    pipe(msg_pipe);
-
-    // TODO use posix queues
-    // Child process
-    if((pid = fork()) == 0) {
-        char secret_message[MESSAGE_SIZE];
-        close(msg_pipe[1]);
-        int rd = read(msg_pipe[0], secret_message, sizeof(secret_message));
-        if(rd == 0)
-            printf("Empty Message.\n");
-        else {
-            printf("Child proces recived message: \n");
-            printf("%s", secret_message);
-        }
-        exit(0);
-    }
-    // Parent process
-    else {
-        // Get message and write it to pipe
-        char message[MESSAGE_SIZE];
-        printf("Enter a message: \n");
-        fgets(message, MESSAGE_SIZE, stdin);
-        close(msg_pipe[0]);
-        write(msg_pipe[1], message, MESSAGE_SIZE);
-    }
-
-    // Wait for process to finish
-    pid = wait(&status);
-    printf("Child process finished with status: %d.\n", WEXITSTATUS(status));
-}
 
 void b64_encode_test() {
     char message[] = "any carnal pleasure.";
@@ -86,57 +50,153 @@ void b64_encode_test() {
     printf("Msg: %s\nYW55IGNhcm5hbCBwbGVhc3Vy\n%s\n", message3, encoded3);
     printf("Len 24: %d\n", len4);
 }
-
-void encrypt_compare (uint32_t* v, uint32_t* k) {
-    uint32_t v0=v[0], v1=v[1], sum=0, i;           /* set up */
-    uint32_t delta=0x9e3779b9;                     /* a key schedule constant */
-    uint32_t k0=k[0], k1=k[1], k2=k[2], k3=k[3];   /* cache key */
-    for (i=0; i < 32; i++) {                       /* basic cycle start */
-        sum += delta;
-        v0 += ((v1<<4) + k0) ^ (v1 + sum) ^ ((v1>>5) + k1);
-        v1 += ((v0<<4) + k2) ^ (v0 + sum) ^ ((v0>>5) + k3);
-    }                                              /* end cycle */
-    v[0]=v0; v[1]=v1;
+void tea_block_encrypt_test() {
+    uint32_t k[4] = {0x32,0x32,0x43,0xAB};
+    uint32_t actual[] = {0xFFFFFFFF, 0xFFFFFFFF}; 
+    encrypt_block(actual, k);   
 }
-
-void decrypt_compare(uint32_t* v, uint32_t* k) {
-    uint32_t v0=v[0], v1=v[1], sum=0xC6EF3720, i;  /* set up */
-    uint32_t delta=0x9e3779b9;                     /* a key schedule constant */
-    uint32_t k0=k[0], k1=k[1], k2=k[2], k3=k[3];   /* cache key */
-    for (i=0; i<32; i++) {                         /* basic cycle start */
-        v1 -= ((v0<<4) + k2) ^ (v0 + sum) ^ ((v0>>5) + k3);
-        v0 -= ((v1<<4) + k0) ^ (v1 + sum) ^ ((v1>>5) + k1);
-        sum -= delta;
-    }                                              /* end cycle */
-    v[0]=v0; v[1]=v1;
-}
-
 void tea_encrypt_test() {
-    uint32_t k[4];
-    uint32_t v[] = {0xFFFFFFFF, 0xFFFFFFFF};
-    printf("C   Implementation Original Values:  ");
-    printf("[ %X %X ]", v[0], v[1]);
-    encrypt_compare(v, k);
-    printf("\nC   Implementation Encrypted Values: ");
-    printf("[ %X %X ]", v[0], v[1]);
-    printf("\nC   Implementation Decrypted Values: ");
-    decrypt_compare(v,k);
-    printf("[ %X %X ]\n", v[0], v[1]);
-
-    uint32_t v1[] = {0xFFFFFFFF, 0xFFFFFFFF};
-    printf("\nASM Implementation Original Values:  ");
-    printf("[ %X %X ]", v1[0], v1[1]);
-    encrypt(v1, k);
-    printf("\nASM Implementation Encrypted Values: ");
-    printf("[ %X %X ]", v1[0], v1[1]);
-    printf("\nASM Implementation Decrypted Values: ");
-    decrypt(v1,k);
-    printf("[ %X %X ]\n", v1[0], v1[1]);
+    uint32_t k[4] = {0x32,0x32,0x43,0xAB};
+    uint32_t actual[] = {0xFFFFFFFF, 0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
+    int len = sizeof(actual) / sizeof(char);
+    printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
+    encrypt(actual,k,len);
+    printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
+    decrypt(actual,k,len);
+    printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
 }
+void tea_encryption_text_test() {
+    char key[16] = "TESTKLUCZA123456";
+    char message[] = "Hello World! Nice to meet you asdashdasdgakshda!";
+    int size = sizeof(message)/ sizeof(char);
+    printf("%s\n", message);
+    encrypt(message,key, size);
+    printf("%s\n", message);
+    decrypt(message,key,size);
+    printf("%s\n", message);
+} 
+void mq_run() {
+    
+    mq_unlink("queue");
+    mqd_t mq;
+    struct mq_attr attr;
+    attr.mq_msgsize = sizeof(message_t);
+    attr.mq_maxmsg = 1;
+    attr.mq_flags = 0;
+    attr.mq_curmsgs = 0;
+  
+    mq = mq_open("/queue", O_RDWR | O_CREAT | O_NONBLOCK, 0777, &attr);
+    char msg_text[] = "Wiadomość testowa 123456!";
+    char msg_key[] = "TESTKLUCZA123456";
+    int size = (int)strlen(msg_text);   
+    printf("Before encryption: %s\n", msg_text);
+    encrypt(msg_text, msg_key, size);
+    message_t msg;
+    sprintf(msg.text,"%s", msg_text);
+    sprintf(msg.key, "%s", msg_key);
+    msg.size = size;
+
+    printf("Key sent: %s\n",msg.key);
+    printf("Encrypted msg sent: %s\n", msg.text);
+    printf("Len of msg sent: %d\n", msg.size);
+    printf("Size of message_type: %d\n", (int)sizeof(message_t));
+
+    mq_send(mq,(char*)&msg, sizeof(message_t), 0);
+    mq_close(mq);
+
+    int pid;
+    if((pid = fork()) == 0) {  
+        mqd_t mq = mq_open("/queue", O_RDWR | O_NONBLOCK);
+        sleep(1);
+        message_t msg;
+        mq_receive(mq, (char*)&msg, sizeof(message_t), NULL);
+        printf("\nKey received: %s\n", msg.key);
+        printf("Message received: %s\n", msg.text);
+        printf("Len of msg: %d\n", msg.size);
+        decrypt(msg.text, msg.key, msg.size);
+        printf("Decrypted msg: %s\n", msg.text);
+        mq_close(mq);
+        exit(0);
+    }
+   
+    int status;
+    pid = wait(&status);
+ 
+    printf("Child process finished with status: %d.\n", WEXITSTATUS(status));
+} 
+
+char* get_message() {
+    // Read the msg from stdin. The size of msg is arbitrary - memory
+    // is reallocated as needed
+    char* message = (char*)calloc(1,1), buffer[MESSAGE_SIZE];
+    printf("Enter a message: \n");
+    // Only pressing ctrl+d or ctr+z stops reading the message
+    while (fgets(buffer, MESSAGE_SIZE, stdin)) {
+        message = (char*) realloc(message, strlen(message) + 1 + strlen(buffer));
+        if(!message)
+            perror("fgets");
+        strcat(message, buffer);
+    }
+    return message;
+}
+
+void run() {
+    int pid, status;
+    // Create pipe for communication between processes
+    int msg_pipe[2];
+    pipe(msg_pipe);
+
+    // TODO use posix queues
+    // Child process
+    if((pid = fork()) == 0) {
+        int rd;
+        message_t msg;
+        close(msg_pipe[1]); 
+        rd = read(msg_pipe[0], &msg, sizeof(message_t));
+        if(rd == 0)
+            printf("Empty Message.\n");
+        else {
+            printf("\nKey received: %s\n", msg.key);
+            printf("Msg received: %s\n", msg.text);
+            char b64[512];
+            base64_encode(msg.text, b64, msg.size);
+            printf("b64 encoded: %s\n", b64);
+            decrypt(msg.text,msg.key,msg.size);
+            printf("Msg decrypted: %s\n", msg.text);
+        }
+        exit(0);
+    }
+    // Parent process
+    else {
+        char msg_text[] = "Wiadomość testowa 123456!";
+        char msg_key[] = "TESTKLUCZA123456";
+        int size = (int)strlen(msg_text);   
+        printf("Before encryption: %s\n", msg_text);
+        encrypt(msg_text, msg_key, size);
+        message_t msg;
+        sprintf(msg.text,"%s", msg_text);
+        sprintf(msg.key, "%s", msg_key);
+        msg.size = size;
+        printf("Key sent: %s\n",msg.key);
+        printf("Encrypted msg sent: %s\n", msg.text);
+        char b64[512];
+        base64_encode(msg.text, b64, msg.size);
+        printf("b64 encoded: %s\n", b64);
+        printf("Len of msg sent: %d\n", msg.size);
+        close(msg_pipe[0]);
+        write(msg_pipe[1], &msg, sizeof(message_t));
+    }
+
+    // Wait for process to finish
+    pid = wait(&status);
+    printf("Child process finished with status: %d.\n", WEXITSTATUS(status));
+}
+
 
 int main(int argc, char* argv[]) {
-    // run();
+    run();
+    //mq_run();
     // b64_encode_test();
-    tea_encrypt_test();
+    // tea_encryption_text_test();
     return 0;
 }
