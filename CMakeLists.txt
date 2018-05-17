@@ -1,15 +1,22 @@
 cmake_minimum_required (VERSION 2.8)
-project(AK2_Projekt C ASM)
+project(AK2 C CXX ASM)
+
 set (CMAKE_CXX_FLAGS "-g")
 set(CMAKE_BUILD_TYPE Debug)
-
-set_source_files_properties(print.s PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
-
 
 file(MAKE_DIRECTORY bin)
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
-add_executable(main src/main.c src/cryptography/print.s src/cryptography/base64.s src/cryptography/tea.s)
+enable_testing()
+add_subdirectory(src)
+add_subdirectory(test)
+add_test(NAME Test COMMAND Test)
+set(UNIT_TEST Test)
+add_custom_command(
+    TARGET ${UNIT_TEST}
+    COMMENT "Runs tests after build"
+    POST_BUILD
+    COMMAND ${UNIT_TEST}
+)
