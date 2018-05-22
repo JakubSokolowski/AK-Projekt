@@ -57,37 +57,45 @@ void b64_decode_test() {
    
     char message1[] = "YW55IGNhcm5hbCBwbGVhc3VyZS4=";
     len = sizeof(message1) / sizeof(char);
+
     len_out = base64_decode(message1, decoded, len);
-    decoded[len_out] = 0; // set end of string
-    printf("Msg: %s\n%s\n", message1, decoded);
+    printf("Msg: %s\n",message1);
+    printf("Len: %d\n", len_out);
+    printf("Decoded: %s\n",decoded);
    
     char message2[] = "YW55IGNhcm5hbCBwbGVhc3VyZQ==";
+
     len = sizeof(message2) / sizeof(char);
     len_out = base64_decode(message2, decoded, len);
-    decoded[len_out] = 0; // set end of string
-    printf("Msg: %s\n%s\n", message2, decoded);
+    // decoded[len_out] = 0; // set end of string
+    printf("Msg: %s\n",message2);
+    printf("Len: %d\n", len_out);
+    printf("Decoded: %s\n",decoded);
    
     char message3[] = "YW55IGNhcm5hbCBwbGVhc3Vy";
     len = sizeof(message3) / sizeof(char);
-    len_out = base64_encode(message3, decoded, len);
-    decoded[len_out] = 0; // set end of string
-    printf("Msg: %s\n%s\n", message3, decoded);
+
+    len_out = base64_decode(message3, decoded, len);
+    // decoded[len_out] = 0; // set end of string 
+    printf("Msg: %s\n",message3);
+    printf("Len: %d\n", len_out);
+    printf("Decoded: %s\n",decoded);
 }
 
 
 void tea_block_encrypt_test() {
     uint32_t k[4] = {0x32,0x32,0x43,0xAB};
     uint32_t actual[] = {0xFFFFFFFF, 0xFFFFFFFF}; 
-    encrypt_block(actual, k);   
+    encrypt_block((char*)actual, (char*)k);   
 }
 void tea_encrypt_test() {
     uint32_t k[4] = {0x32,0x32,0x43,0xAB};
     uint32_t actual[] = {0xFFFFFFFF, 0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
     int len = sizeof(actual) / sizeof(char);
     printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
-    encrypt(actual, k, len);
+    encrypt((char*)actual, (char*)k, len);
     printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
-    decrypt(actual, k, len);
+    decrypt((char*)actual, (char*)k, len);
     printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
 }
 void tea_encryption_text_test() {
@@ -219,9 +227,10 @@ void run() {
 
 
 int main(int argc, char* argv[]) {
-    run();
+    // run();
     //mq_run();
     // b64_encode_test();
     // tea_encryption_text_test();
+    b64_decode_test();
     return 0;
 }
