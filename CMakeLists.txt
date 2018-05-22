@@ -14,9 +14,3 @@ add_subdirectory(src)
 add_subdirectory(test)
 add_test(NAME Test COMMAND Test)
 set(UNIT_TEST Test)
-add_custom_command(
-    TARGET ${UNIT_TEST}
-    COMMENT "Runs tests after build"
-    POST_BUILD
-    COMMAND ${UNIT_TEST}
-)

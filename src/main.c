@@ -50,6 +50,31 @@ void b64_encode_test() {
     printf("Msg: %s\nYW55IGNhcm5hbCBwbGVhc3Vy\n%s\n", message3, encoded3);
     printf("Len 24: %d\n", len4);
 }
+
+void b64_decode_test() {
+    int len, len_out;
+    char decoded[512];
+   
+    char message1[] = "YW55IGNhcm5hbCBwbGVhc3VyZS4=";
+    len = sizeof(message1) / sizeof(char);
+    len_out = base64_decode(message1, decoded, len);
+    decoded[len_out] = 0; // set end of string
+    printf("Msg: %s\n%s\n", message1, decoded);
+   
+    char message2[] = "YW55IGNhcm5hbCBwbGVhc3VyZQ==";
+    len = sizeof(message2) / sizeof(char);
+    len_out = base64_decode(message2, decoded, len);
+    decoded[len_out] = 0; // set end of string
+    printf("Msg: %s\n%s\n", message2, decoded);
+   
+    char message3[] = "YW55IGNhcm5hbCBwbGVhc3Vy";
+    len = sizeof(message3) / sizeof(char);
+    len_out = base64_encode(message3, decoded, len);
+    decoded[len_out] = 0; // set end of string
+    printf("Msg: %s\n%s\n", message3, decoded);
+}
+
+
 void tea_block_encrypt_test() {
     uint32_t k[4] = {0x32,0x32,0x43,0xAB};
     uint32_t actual[] = {0xFFFFFFFF, 0xFFFFFFFF}; 
@@ -60,9 +85,9 @@ void tea_encrypt_test() {
     uint32_t actual[] = {0xFFFFFFFF, 0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF};
     int len = sizeof(actual) / sizeof(char);
     printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
-    encrypt(actual,k,len);
+    encrypt(actual, k, len);
     printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
-    decrypt(actual,k,len);
+    decrypt(actual, k, len);
     printf("[%X][%X][%X][%X]\n", actual[0],actual[1],actual[2],actual[3]); 
 }
 void tea_encryption_text_test() {
