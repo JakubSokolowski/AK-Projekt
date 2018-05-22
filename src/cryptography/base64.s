@@ -90,8 +90,37 @@ base64_encode:
     done:        
         ret
 
-.type base64_decode, @function
-base64_decode4
+.type my_strchr, @function
+my_strchr:
+    # function returns pointer to specified character %dl at input string %%rax or null if not found
+    # INPUT ARGS:
+    # %rdi - char* src, %rsi - char ch
+    # my_strchr
+        push %rcx
+        push %rdx
+        mov %rsi, %rdx
+        jmp my_strchr_while
+    _begin_while:
+    # (*src == ch) return (char *)src;
+        cmp %cl, %dl
+        jz my_strchr_end
+    # src++;
+        inc %rdi
+    # while (*src)
+    my_strchr_while:
+        mov (%rdi), %cl
+        test %cl, %cl
+        jnz _begin_while
+    # return NULL;
+        xor %rdi, %rdi
+    my_strchr_end:
+        pop %rdx
+        pop %rcx
+ 
+        ret
+
+.type base64_decode4, @function
+base64_decode4:
     # INPUT ARGS:
     # %rdi - char* src, %rsi - char* dest
         push %rbp
@@ -110,7 +139,7 @@ base64_decode4
     # for (i = 0; i < 4; i++)
         xor %rdi, %rdi # i
     base64_decode4_begin_for:
-    #if ((found = (char*)my_strchr(base64_table, src[i])) != NULL)
+    # ((found = (char*)my_strchr(base64_table, src[i])) != NULL)
         mov (%rbx), %dl
         mov base64_table, %rax
         call my_strchr
@@ -125,7 +154,7 @@ base64_decode4
         add %rdx, %rsi
         jmp base64_decode4_end_for
     base64_decode4_else_if:
-    # else if (src[i] == '=')
+    # elseif(src[i] == '=')
         movsx (%rbx), %rcx
         cmp $'=', %rcx
         jnz base64_decode4_end_for
@@ -136,26 +165,26 @@ base64_decode4
         inc %rbx
         cmp $4, %rdi
         jl base64_decode4_begin_for
-    #dest[2] = (unsigned char)(x & 255);
+    # dest[2] = (unsigned char)(x & 255);
         mov -8(%rbp), %rdx
         mov %rsi, %rax
         and $255, %al
         mov %al, 2(%rdx)
-    #x >>= 8;
+    # x >>= 8;
         shr $8, %rsi
-    #dest[1] = (unsigned char)(x & 255);
+    # dest[1] = (unsigned char)(x & 255);
         mov -8(%rbp), %rdx
         mov %rsi, %rax
         and $255, %al
         mov %al, 1(%rdx)
-    #x >>= 8;
+    # x >>= 8;
         shr $8, %rsi
-    #dest[0] = (unsigned char)(x & 255);
+    # dest[0] = (unsigned char)(x & 255);
         mov -8(%rbp), %rdx
         mov %rsi, %rax
         and $255, %al
         mov %al, (%rdx)
-    #cleanup
+    # cleanup
         pop %rdx
         pop %rcx
         pop %rbx
@@ -178,21 +207,20 @@ base64_decode:
         push %rdx
         mov %rdi, %rax # in
         mov %rsi, %rdx # out
-    #int length = 0;
+    # int length = 0;
         xor %rdx, %rdx
-    #int equalsTerm = 0; # -8(%rbp)
+    # int equalsTerm = 0; # -8(%rbp)
         xor %rax, %rax
         mov %rax, -8(%rbp)
-    #int i;
-    #int numQuantums; # -16(%rbp)
-    #unsigned char lastQuantum[3]; # -24(%rbp)
-    #unsigned int rawlen; # -32(%rbp)
+    # int i;
+    # int numQuantums; # -16(%rbp)
+    # unsigned char lastQuantum[3]; # -24(%rbp)
+    # unsigned int rawlen; # -32(%rbp)
  
-    #*out = NULL;
-        movb $0, (%rdi)
+    # *out = NULL;
         mov %rsi, %rax
         jmp base64_decode_while_begin
-    #while ((in[length] != '=') && in[length]) length++;
+    # while ((in[length] != '=') && in[length]) length++;
     base64_decode_while:
         inc %rdx
         inc %rax
@@ -204,24 +232,23 @@ base64_decode:
         test %cl, %cl
         jnz base64_decode_while
     base64_decode_while_begin2:
-    #if (in[length] == '=')
-    #{
+    # {
         movsx (%rdx,%rsi), %rax
         cmp $'=', %rax
         jnz base64_decode_endif
-    #    equalsTerm++;
+    # equalsTerm++;
         incq -8(%rbp)
-    #    if (in[length+equalsTerm] == '=')
+    # (in[length+equalsTerm] == '=')
         lea (%rdx,%rsi), %rcx
         mov -8(%rbp), %rax
         movsx (%rcx,%rax), %rcx
         cmp $'=', %rcx
         jnz base64_decode_endif
-    #    equalsTerm++;
+    #  equalsTerm++;
         incq -8(%rbp)
-    #}
+    # }
     base64_decode_endif:
-    #numQuantums = (length + equalsTerm) / 4;
+    # numQuantums = (length + equalsTerm) / 4;
         add -8(%rbp), %rdx
         test %rdx, %rdx
         jns base64_decode_numQuantums2
@@ -229,18 +256,18 @@ base64_decode:
     base64_decode_numQuantums2:
         sar $2, %rdx
         mov %rdx, -16(%rbp)
-    #if (numQuantums <= 0) return 0;
+    # (numQuantums <= 0) return 0;
         cmpq $0, -16(%rbp)
         jnle base64_decode_endif2
         xor %rax, %rax
         jmp base64_decode_end
     base64_decode_endif2:
-    #rawlen = (numQuantums * 3) - equalsTerm;
+    # rawlen = (numQuantums * 3) - equalsTerm;
         mov -16(%rbp), %rdx
         lea (%rdx,%rdx,2), %rdx
         sub -8(%rbp), %rdx
-    #for (i = 0; i < numQuantums - 1; i++)
-    #{
+    # for (i = 0; i < numQuantums - 1; i++)
+    # {
         xor %rbx, %rbx # i
         mov %rdx, -32(%rbp)
         jmp base64_decode_end_for
@@ -258,11 +285,11 @@ base64_decode:
         dec %rcx
         cmp %rcx, %rbx
         jl base64_decode_for_begin
-    #base64_decode4(in, lastQuantum);
+    # base64_decode4(in, lastQuantum);
         lea -24(%rbp), %rdx
         mov %rsi, %rax
         call base64_decode4
-    #for (i = 0; i < 3 - equalsTerm; i++) out[i] = lastQuantum[i];
+    # for (i = 0; i < 3 - equalsTerm; i++) out[i] = lastQuantum[i];
         xor %rbx, %rbx
         mov %rdi, %rdx
         lea -24(%rbp), %rax
@@ -278,10 +305,10 @@ base64_decode:
         sub -8(%rbp), %rcx
         cmp %rcx, %rbx
         jl base64_decode_for_loop
-    #out[i] = 0;
+    # out[i] = 0;
         movb $0, (%rbx,%rdi)
-    #return rawlen;
-        mov -32(%rbp), %rax #rawlen
+    # return rawlen;
+        mov -32(%rbp), %rax # rawlen
     base64_decode_end:
         pop %rdx
         pop %rcx
