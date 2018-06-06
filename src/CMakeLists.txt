@@ -5,6 +5,8 @@ set(CRYPTOGRAPHY_FILES
     cryptography/print.s
     cryptography/tea.h
     cryptography/tea.s
+    cryptography/dhexchange.h
+    cryptography/dhexchange.s
 )
 
 set_source_files_properties(${CRYPTOGRAPHY_FILES} PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
