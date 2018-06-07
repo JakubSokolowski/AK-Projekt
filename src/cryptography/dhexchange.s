@@ -70,27 +70,38 @@ _u128_rshift: #void(uint128_t* dq)
 	ret
 ##############################################################
 .type _u128_compare, @function
-_u128_compare: #int(const uint128_t a, const uint128_t b)
-
+_u128_compare: # int(const uint128_t a, const uint128_t b)
 	# a.low  -> %rdi
 	# a.high -> %rsi
 	# b.low  -> %rdx
 	# b.high -> %rcx
+	pushq %rbp
+	high_cmp:
+		cmpq %rcx, %rsi			# a.high > b.high ? cmp %rcx, %rsi
+		jbe high_less_equal
+		jmp greater
+	high_less_equal:    		# a.high <= b.high
+		cmpq %rcx, %rsi 		# a.high == b.high ?
+		jne lesser	
+		cmpq %rdx, %rdi         # a.low > b.low ?
+		jbe low_less_equal
+		jmp greater
+	low_less_equal:				# a.low <= b.low
+		cmpq %rdx, %rdi
+		jne lesser				# a < b		
+		jmp equal				# a == b
+	greater:
+		movl $1, %eax
+		jmp end
+	equal:
+		movl $0, %eax
+		jmp end
+	lesser:  
+		movl $-1, %eax
+	end:
+		popq %rbp
+		ret
 
-	cmp %rcx, %rsi
-	jg _u128_compare_g
-	jl _u128_compare_l
-	cmp %rdx, %rdi
-	jg _u128_compare_g
-	jl _u128_compare_l
-	mov $0, %rax
-	ret
-_u128_compare_g:
-	mov $1, %rax
-	ret
-_u128_compare_l:
-	mov $-1, %rax
-	ret
 
 ##############################################################
 ##############################################################
