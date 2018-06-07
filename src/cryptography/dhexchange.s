@@ -80,10 +80,10 @@ _u128_compare: # int(const uint128_t a, const uint128_t b)
 		cmpq %rcx, %rsi			# a.high > b.high ? cmp %rcx, %rsi
 		jbe high_less_equal
 		jmp greater
-	high_less_equal:    		# a.high <= b.high
-		cmpq %rcx, %rsi 		# a.high == b.high ?
+	high_less_equal:			# a.high <= b.high
+		cmpq %rcx, %rsi			# a.high == b.high ?
 		jne lesser	
-		cmpq %rdx, %rdi         # a.low > b.low ?
+		cmpq %rdx, %rdi			# a.low > b.low ?
 		jbe low_less_equal
 		jmp greater
 	low_less_equal:				# a.low <= b.low
