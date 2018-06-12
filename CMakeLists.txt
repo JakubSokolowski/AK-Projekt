@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8)
 project(AK2 C ASM)
 
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -no-pie -Wall -Werror -lboost_unit_test_framework")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -no-pie -Wall -lboost_unit_test_framework")
 set(CMAKE_BUILD_TYPE Debug)
 
 file(MAKE_DIRECTORY bin)
