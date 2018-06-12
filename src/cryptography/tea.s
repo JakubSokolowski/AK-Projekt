@@ -14,6 +14,17 @@ encrypt_block:
     pushq %rbp
     movq %rsp, %rbp
 
+    # Save all the registers
+
+    push %rsi
+    push %rdi
+    push %rax
+    push %rbx
+    push %rcx
+    push %rdx
+    push %r8
+    push %r9
+    push %r10
 
 
     mov $0, %r8     # index
@@ -73,7 +84,15 @@ encrypt_block:
         mov %eax, (%rdi, %r8, 4)
         inc %r8
         mov %ebx, (%rdi, %r8, 4)
-
+        pop %r10
+        pop %r9
+        pop %r8
+        pop %rdx
+        pop %rcx
+        pop %rbx
+        pop %rax
+        pop %rdi
+        pop %rsi
         movq %rbp, %rsp
         popq %rbp
         ret
@@ -84,6 +103,16 @@ decrypt_block:
     # setup
     pushq %rbp              # save old base pointer
     movq %rsp, %rbp # make stack pointer the base pointer
+
+    push %rsi
+    push %rdi
+    push %rax
+    push %rbx
+    push %rcx
+    push %rdx
+    push %r8
+    push %r9
+    push %r10
 
     mov $0, %r8     # index
     mov (%rdi, %r8, 4), %rax    # v0
@@ -143,7 +172,15 @@ decrypt_block:
         mov %eax, (%rdi, %r8, 4)
         inc %r8
         mov %ebx, (%rdi, %r8, 4)
-
+        pop %r10
+        pop %r9
+        pop %r8
+        pop %rdx
+        pop %rcx
+        pop %rbx
+        pop %rax
+        pop %rdi
+        pop %rsi
         movq %rbp, %rsp
         popq %rbp
         ret
@@ -151,6 +188,14 @@ decrypt_block:
 encrypt:
     pushq %rbp
     movq %rsp, %rbp
+
+    push %rdi
+    push %rsi
+    push %rax
+    push %rbx
+    push %rdx
+    push %r11
+    push %r12
     # %rdi - uint32_t* v, %rsi - uint32_t* k , %rdx - size
     cmp $0, %rdx        # empty input buffer - do nothing
     je end_encrypt
@@ -159,6 +204,7 @@ encrypt:
     mov $0, %rdx
     mov $8, %rbx
     div %rbx # %rax - number of full chunks
+    push %rbx
 
     mov %rax, %r12
     cmp $0, %r12
@@ -178,6 +224,14 @@ encrypt:
         je end_encrypt
         call encrypt_block
     end_encrypt:
+        pop %rbx
+        pop %r12
+        pop %r11
+        pop %rdx
+        pop %rbx
+        pop %rax
+        pop %rsi
+        pop %rdi
         movq %rbp, %rsp
         popq %rbp
         ret
@@ -185,16 +239,21 @@ encrypt:
 decrypt:
     pushq %rbp
     movq %rsp, %rbp
+    push %rdi
+    push %rsi
+    push %rax
+    push %rbx
+    push %rdx
+    push %r11
+    push %r12
     # %rdi - uint32_t* v, %rsi - uint32_t* k , %rdx - size
     cmp $0, %rdx        # empty input buffer - do nothing
-    je end_decrypt
-
-    
+    je end_decrypt    
     mov %rdx, %rax
     mov $0, %rdx
     mov $8, %rbx
     div %rbx # %rax - number of full chunks
-
+    push %rbx 
     mov %rax, %r12
     cmp $0, %r12
     je last_dec_chunk
@@ -212,6 +271,16 @@ decrypt:
         je end_decrypt
         call decrypt_block
     end_decrypt:
+        pop %rbx      
+        inc %rdi
+        movq $0, (%rdi)
+        pop %r12
+        pop %r11
+        pop %rdx
+        pop %rbx
+        pop %rax
+        pop %rsi
+        pop %rdi
         movq %rbp, %rsp
         popq %rbp
         ret

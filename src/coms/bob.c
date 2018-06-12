@@ -20,7 +20,7 @@ int start_client(char* adress, struct sockaddr_in *adr_serw) {
     printf("%s\n", adress);
     int s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     error_check(s, "socket");
-    printf("Created socket %d on port %d\n", s, PORT);
+    printf("Utworzono gniazdo %d na porcie %d\n", s, PORT);
     adr_serw->sin_family = AF_INET;
     adr_serw->sin_port = htons(PORT);
     error_check(inet_aton(adress, &adr_serw->sin_addr),"inet_aton()");
@@ -32,31 +32,27 @@ void bob_start(int s, struct sockaddr_in *adr) {
     int snd,rec, blen = sizeof(message_t), slen = sizeof(struct sockaddr_in);
     DH_KEY bob_private, bob_secret, bob_public, alice_public;
     DH_generate_key_pair(bob_public, bob_private);
-    _print_key("Bob public", bob_public);
-    _print_key("Bob private", bob_private);
-    printf("Exchanging keys...\n");
-    printf("Sending public...\n");
+    _print_key("\nBob klucz publiczny", bob_public);
+    _print_key("Bob klucz prywatny", bob_private);
+    printf("Wymiana kluczy...\n");
+    printf("Bob wysyła klucz publiczny...\n");
     snd = sendto(s, &bob_public, DH_KEY_LENGTH, 0,(struct sockaddr *) adr, (socklen_t) slen);
-    sleep(1);
-    printf("Reciving public...\n");
+    printf("Odbierania klucza publicznego Alice...\n");
     rec = recvfrom(s, &alice_public, DH_KEY_LENGTH, 0, (struct sockaddr *) adr, (socklen_t*) &slen);
-    printf("Public received, generating secret...\n");
+    printf("Klucz odebrany, generowanie sekretu...\n");
     DH_generate_key_secret(bob_secret, bob_private, alice_public);
-    _print_key("Bob secret", bob_secret);
-    sleep(1);
-    char buf2[] = "Wiadomość testowa abcsssssssssssssssssssssd1234567";
+    _print_key("Klucz sekretny Boba", bob_secret);
     int size;
     char buf[512];
-  
+    memset(buf, 0, 512);  
+    printf("\nOdbieranie zaszyfrowanej wiadomośći...\n"); 
     rec = recvfrom(s, &size, sizeof(int), 0, (struct sockaddr *) adr, (socklen_t*) &slen);
-    printf("Msg size: %d\n", size);
     rec = recvfrom(s, &buf, size, 0, (struct sockaddr *) adr, (socklen_t*) &slen);
- 
-    printf("Encrypted msg: %s\n", buf);
-    printf("Encrypted msg size: %d\n", strlen(buf));
+    char b64_buf[512];
+    base64_encode(buf,b64_buf,size);
+    printf("Zaszyfrowana wiadomośc msg: %s\n", b64_buf);
     decrypt(buf,(char*)bob_secret,size);
-    printf("Decrypted msg: %s\n", buf);
-    printf("Decrypted msg size: %d\n", strlen(buf));
+    printf("\nOdszyfrowana wiadomość msg: %s\n", buf);
 }
 int main(int argc, char * argv[]) {
     struct sockaddr_in server_adress;
