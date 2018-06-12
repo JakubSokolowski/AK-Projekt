@@ -4,32 +4,14 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-
+#include "cryptography/dhexchange.h"
+#include "coms/message.h"
 #include "cryptography/print.h"
 #include "cryptography/base64.h"
 #include "cryptography/tea.h"
-
-
-#define MESSAGE_SIZE 512
-#define KEY_SIZE 16
-char key[KEY_SIZE] = "TESTKLUCZA123456";
-
-#define CHECK(x) \
-    do { \
-        if ( 0>(x)){ \
-            fprintf(stderr, "%s:%d: ", __func__, __LINE__); \
-            perror(#x); \
-            exit(-1); \
-        } \
-    } while (0) \
-
-typedef struct {
-    int  size;
-    char text[MESSAGE_SIZE];
-    char key[KEY_SIZE];
-} message_t;
 
 
 void b64_encode_test() {
@@ -227,10 +209,9 @@ void run() {
 
 
 int main(int argc, char* argv[]) {
-    // run();
+    run();
     //mq_run();
     // b64_encode_test();
-    // tea_encryption_text_test();
-    b64_decode_test();
+    // tea_encryption_text_test();    
     return 0;
 }
