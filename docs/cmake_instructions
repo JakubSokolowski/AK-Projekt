@@ -1,2 +1,4 @@
 cmake -H. -Bbuild
 cmake --build build -- -j3
+
+Jak coś nie działa, usunąć build i jeszcze raz puścić cmake -H. -Bbuild
